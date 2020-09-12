@@ -34,17 +34,16 @@
           </el-row>
         </el-form-item>
         <el-form-item>
-            <el-button type="primary" class="login-btn block" :disabled="loginButtonStatus" @click="submitForm('ruleForm')" v-if="model == 'login'">登录</el-button>
-            <el-button type="danger" class="login-btn block" :disabled="loginButtonStatus" @click="submitForm('ruleForm')" v-if="model == 'register'">注册</el-button>  
+            <el-button type="primary" class="login-btn block" :disabled="loginButtonStatus" @click="submitForm('loginForm')" v-if="model == 'login'">登录</el-button>
+            <el-button type="danger" class="login-btn block" :disabled="loginButtonStatus" @click="submitForm('loginForm')" v-if="model == 'register'">注册</el-button>  
         </el-form-item>
       </el-form>
     </div>
   </div>
 </template>
 <script>
-
 import { Message } from 'element-ui';
-import { GetSms } from "@/api/login";
+import { GetSms ,Register,Login} from "@/api/login";
 import { reactive, ref, isRef, toRefs, onMounted, watch, onUnmounted } from '@vue/composition-api';
 import { stripscript, validatePass, validateEmail, validateVCode } from '@/utils/validate';
 export default {
@@ -153,7 +152,8 @@ export default {
         data.current = true;
         // 修改模块值
         model.value = data.type;
-        resetFromData()
+        resetFromData();
+         clearCountDown();
       });
       // 清除表单数据
       const resetFromData = (() => {
@@ -185,7 +185,6 @@ export default {
           text: '发送中'
         })
         // 延时多长时间
-        // 延时多长时间
         GetSms(requestData).then(response => {
           let data = response.data;
           root.$message({
@@ -214,14 +213,80 @@ export default {
         refs[formName].validate((valid) => {
           // 表单验证通过
           if (valid) {
-            // 三元运算
-            model.value === 'login' ? login() : register()
+            model.value === 'login' ? login() : register();
           } else {
             console.log('error submit!!');
             return false;
           }
         })
       }) 
+      // 登录接口
+       const login = (() => {
+        let questData = {
+            username: ruleForm.username,
+            password: ruleForm.password,
+            code: ruleForm.code
+          }
+         Login(questData).then(response => {
+           console.log('登录结果');
+           console.log(response)
+          clearCountDown()
+        }).catch(error => {});
+      })
+     // 注册接口
+      const Register = (()=>{
+         let questData = {
+             username: ruleForm.username,
+             password: ruleForm.password,
+             code: ruleForm.code
+           }
+           Register(questData).then( response =>{
+             let data = response.data;
+             root.$message({
+               message:data.message,
+               type:'success'
+             })
+             //注册成功的话就自动跳转到登录页面
+             toggleMenu(menuTab[0]);
+             clearCountDown()
+              }).catch(error => {
+             console.log(error);
+           });
+      })
+      const countDown = ((number) => {
+        // 判断定时器是否存在，存在则清除
+        if(timer.value) { clearInterval(timer.value); }
+        let time = number
+        timer.value = setInterval(() => {
+          time--;
+          if(time === 0) {
+            clearInterval(timer.value)
+            updataButtonStatus({
+              status: false,
+              text: '再次获取'
+            })
+          }else{
+            codeButtonStatus.text = `请在${time}秒重新发送`   
+          }
+        }, 1000)
+      })
+      /**
+       * 清除倒计时
+       */
+      const clearCountDown = (() => {
+        // 还原验证码按钮默认状态
+        updataButtonStatus({
+          status: false,
+          text: '获取验证码'
+        })
+        // 清除倒计时
+        clearInterval(timer.value)
+      })
+
+      onUnmounted(() => {
+        clearInterval(timer.value);
+      })
+
       return {
         menuTab,
         model,
@@ -232,7 +297,9 @@ export default {
         timer,
         toggleMenu,
         submitForm,
-        getSms
+        getSms,
+        countDown,
+        clearCountDown
       }
     }
 }
