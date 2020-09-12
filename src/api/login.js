@@ -1,12 +1,12 @@
-import instance from '@/request/request'
-/*
-*   验证码接口数据
-*/
-export function GetSms(){
-    //axios请求处理
-    return  instance.request({
-        method: 'post',
-        url: '/getSms/',
-        data: {}
-});
+import service from "@/utils/request";
+
+/**
+ * 获取验证码
+ */
+export function GetSms(data){
+    return service.request({
+        method: "post",
+        url: "/getSms/",
+        data:data
+    })
 }

@@ -4,7 +4,7 @@ import { Message } from 'element-ui';
 
 const BASEURL =  process.env.NODE_ENV === "production" ? "" : "/api";
 //创建实例拦截器
-const instance = axios.create({
+const service = axios.create({
     baseURL:BASEURL,
     timeout: 1000
 });
@@ -15,7 +15,7 @@ console.log(process.env.NODE_ENV);
 console.log(process.env.VUE_APP_TEST)
 
 // 添加请求拦截器
-instance.interceptors.request.use(function (config) {
+service.interceptors.request.use(function (config) {
     // 在发送请求之前做些什么
     return config;
   }, function (error) {
@@ -24,7 +24,7 @@ instance.interceptors.request.use(function (config) {
   });
 
 // 添加响应拦截器
-instance.interceptors.response.use(function (response) {
+service.interceptors.response.use(function (response) {
     // 判断响应的数据的resCode
     let data = response.data;
     if(data.resCode != 0 ){
@@ -68,4 +68,4 @@ instance.interceptors.response.use(function (response) {
             // });
 
 //导出
-export default instance;
+export default service;
